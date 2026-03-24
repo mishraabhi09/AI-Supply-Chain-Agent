@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\91638\Desktop\AI Supply_Chain\test_import.py", line 6, in <module>
+    import main
+  File "C:\Users\91638\Desktop\AI Supply_Chain\main.py", line 3, in <module>
+    from agent import chat_with_aegis
+  File "C:\Users\91638\Desktop\AI Supply_Chain\agent.py", line 5, in <module>
+    from langchain.agents import initialize_agent, AgentType
+ImportError: cannot import name 'initialize_agent' from 'langchain.agents' (C:\Users\91638\AppData\Roaming\Python\Python313\site-packages\langchain\agents\__init__.py)
