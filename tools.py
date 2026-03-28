@@ -42,6 +42,19 @@ def query_external_api(url: str, params_json: str = "{}") -> str:
     except Exception as e:
         return json.dumps({"error": f"Failed to fetch data from API: {str(e)}"})
 
+def check_global_news(keyword: str) -> str:
+    """Check global news and events for supply chain disruptions by keyword."""
+    keyword_lower = keyword.lower()
+    if "rotterdam" in keyword_lower or "port" in keyword_lower or "strike" in keyword_lower:
+        return json.dumps({
+            "event": "Port Strike",
+            "location": "Rotterdam",
+            "severity": "Critical",
+            "estimated_delay_days": 14,
+            "description": "Major port strike in Rotterdam causing severe shipping delays."
+        })
+    return json.dumps({"status": "No major disruptions found for this keyword."})
+
 def check_inventory(product_id: str) -> str:
     """Check the inventory details for a given product ID."""
     conn = get_connection()
@@ -81,8 +94,8 @@ def simulate_ripple_effect(product_id: str, delay_days: int) -> str:
     
     # Basic logic for ripple effect impact
     impact = "Low"
-    if delay_days > lead_time:
-        impact = "High - Stockout expected"
+    if delay_days >= lead_time:
+        impact = "High - Stockout in 2 days. Production halt in 5 days."
     elif stock < reorder_level:
         impact = "Medium - Reorder recommended"
     

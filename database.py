@@ -72,19 +72,22 @@ def init_db():
             INSERT INTO Products (product_id, name, category) VALUES
             ('P001', 'Semiconductor Chips', 'Electronics'),
             ('P002', 'Lithium Batteries', 'Energy'),
-            ('P003', 'Steel Frames', 'Materials');
+            ('P003', 'Steel Frames', 'Materials'),
+            ('SKU-1001', 'High-Tensile Bolts', 'Hardware');
 
             INSERT INTO Inventory (product_id, stock, reorder_level, lead_time_days) VALUES
             ('P001', 500, 1000, 14),
             ('P002', 1200, 500, 7),
-            ('P003', 200, 150, 30);
+            ('P003', 200, 150, 30),
+            ('SKU-1001', 50, 500, 14);
 
             INSERT INTO Suppliers (supplier_id, name, location, status) VALUES
             ('S001', 'TechCorp Asia', 'Taiwan', 'Active'),
             ('S002', 'Global Energy', 'Germany', 'Active'),
             ('S003', 'SteelWorks Inc', 'USA', 'Active'),
             ('S004', 'Sanctioned Metals', 'North Korea', 'Restricted'),
-            ('S005', 'Backup Chips Ltd', 'Vietnam', 'Active');
+            ('S005', 'Backup Chips Ltd', 'Vietnam', 'Active'),
+            ('S006', 'FastenerCo', 'Rotterdam', 'Active');
         """)
 
     conn.commit()
