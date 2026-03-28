@@ -3,11 +3,67 @@ import requests
 import pandas as pd
 import sqlite3
 from export_utils import export_csv, export_pdf, export_docx
+from database import migrate_db
+
+# Run migration to ensure unit_cost and risk_level columns exist
+try:
+    migrate_db()
+except Exception:
+    pass
 
 st.set_page_config(page_title="Aegis Supply Chain Agent", layout="wide")
 
+# --- Custom Button Colors via CSS Injection ---
+st.markdown("""
+<style>
+/* ── CSV buttons (green) ─────────────────────────── */
+[data-testid="stDownloadButton"]:has(button[data-testid="baseButton-secondary"]) button,
+div[data-testid="stDownloadButton"] button {
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+}
+
+/* Target by button label text using nth-of-type trick per column group */
+/* CSV export buttons — green */
+div[data-testid="column"]:nth-child(1) div[data-testid="stDownloadButton"] button {
+    background-color: #1a7f4b !important;
+    color: #ffffff !important;
+}
+div[data-testid="column"]:nth-child(1) div[data-testid="stDownloadButton"] button:hover {
+    background-color: #15a358 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,127,75,0.4) !important;
+}
+
+/* PDF export buttons — coral/red */
+div[data-testid="column"]:nth-child(2) div[data-testid="stDownloadButton"] button {
+    background-color: #c0392b !important;
+    color: #ffffff !important;
+}
+div[data-testid="column"]:nth-child(2) div[data-testid="stDownloadButton"] button:hover {
+    background-color: #e74c3c !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(192,57,43,0.4) !important;
+}
+
+/* Word export buttons — blue */
+div[data-testid="column"]:nth-child(3) div[data-testid="stDownloadButton"] button {
+    background-color: #1a56a0 !important;
+    color: #ffffff !important;
+}
+div[data-testid="column"]:nth-child(3) div[data-testid="stDownloadButton"] button:hover {
+    background-color: #2874d5 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26,86,160,0.4) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🛡️ Aegis: Autonomous Supply Chain Resilience Agent")
 st.markdown("Monitor disruptions, analyze risk, and execute guarded supply chain decisions.")
+
 
 # --- Sidebar: Data Management ---
 st.sidebar.title("📁 Real Data Integration")
@@ -77,7 +133,9 @@ logs_df = logs_df_full.head(30)
 if not logs_df.empty:
     st.sidebar.dataframe(
         logs_df.style.applymap(
-            lambda x: 'background-color: #ffcccc' if x == 'blocked' else ('background-color: #ccffcc' if x == 'passed' else ''), 
+            lambda x: 'background-color: #ffcccc; color: #111111; font-weight: 600' if x == 'blocked' 
+                 else ('background-color: #ccffcc; color: #111111; font-weight: 600' if x == 'passed' 
+                 else ('background-color: #fff3cd; color: #111111; font-weight: 600' if x == 'overridden' else '')), 
             subset=['guardrail_status']
         ), 
         use_container_width=True,
@@ -104,22 +162,25 @@ with st.expander("Filter Products by Category, Price, or Risk Level", expanded=F
     c1, c2, c3 = st.columns(3)
     conn = sqlite3.connect("supply_chain.db")
     
-    # Read distinct categories safely
+    # Read distinct categories and risk levels safely
     try:
         categories = ["All"] + pd.read_sql_query("SELECT DISTINCT category FROM Products", conn)["category"].tolist()
-        risk_levels = ["All", "Low", "Medium", "High", "Critical"]
+        risk_levels = ["All"] + pd.read_sql_query("SELECT DISTINCT risk_level FROM Products WHERE risk_level IS NOT NULL", conn)["risk_level"].tolist()
+        max_cost_row = pd.read_sql_query("SELECT MAX(unit_cost) as max_cost FROM Products", conn)
+        db_max_cost = int(max_cost_row["max_cost"].iloc[0] or 50000)
     except Exception:
         categories = ["All"]
-        risk_levels = ["All"]
-        
+        risk_levels = ["All", "Low", "Medium", "High", "Critical"]
+        db_max_cost = 50000
+
     with c1:
         sel_cat = st.selectbox("Category", categories, key="search_cat")
     with c2:
-        max_price = st.slider("Max Price ($)", 0, 50000, 50000, step=100, key="search_price")
+        max_price = st.slider("Max Price ($)", 0, max(db_max_cost, 50000), max(db_max_cost, 50000), step=100, key="search_price")
     with c3:
-        sel_risk = st.selectbox("Risk Level (Exact Match)", risk_levels, key="search_risk")
+        sel_risk = st.selectbox("Risk Level", risk_levels, key="search_risk")
         
-    query = "SELECT p.*, i.stock, i.reorder_level FROM Products p LEFT JOIN Inventory i ON p.product_id = i.product_id WHERE p.unit_cost <= ?"
+    query = "SELECT p.*, i.stock, i.reorder_level, i.lead_time_days FROM Products p LEFT JOIN Inventory i ON p.product_id = i.product_id WHERE p.unit_cost <= ?"
     params = [max_price]
     
     if sel_cat != "All":

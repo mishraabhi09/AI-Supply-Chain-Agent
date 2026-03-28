@@ -18,7 +18,9 @@ def init_db():
         CREATE TABLE IF NOT EXISTS Products (
             product_id TEXT PRIMARY KEY,
             name TEXT,
-            category TEXT
+            category TEXT,
+            unit_cost REAL DEFAULT 0.0,
+            risk_level TEXT DEFAULT 'Medium'
         );
 
         CREATE TABLE IF NOT EXISTS Inventory (
@@ -69,11 +71,11 @@ def init_db():
     cursor.execute("SELECT COUNT(*) as count FROM Products")
     if cursor.fetchone()['count'] == 0:
         cursor.executescript("""
-            INSERT INTO Products (product_id, name, category) VALUES
-            ('P001', 'Semiconductor Chips', 'Electronics'),
-            ('P002', 'Lithium Batteries', 'Energy'),
-            ('P003', 'Steel Frames', 'Materials'),
-            ('SKU-1001', 'High-Tensile Bolts', 'Hardware');
+            INSERT INTO Products (product_id, name, category, unit_cost, risk_level) VALUES
+            ('P001', 'Semiconductor Chips', 'Electronics', 12500.00, 'High'),
+            ('P002', 'Lithium Batteries', 'Energy', 4800.00, 'Medium'),
+            ('P003', 'Steel Frames', 'Materials', 850.00, 'Low'),
+            ('SKU-1001', 'High-Tensile Bolts', 'Hardware', 120.00, 'Low');
 
             INSERT INTO Inventory (product_id, stock, reorder_level, lead_time_days) VALUES
             ('P001', 500, 1000, 14),
@@ -92,6 +94,29 @@ def init_db():
 
     conn.commit()
     conn.close()
+    migrate_db()
+
+def migrate_db():
+    """Safely add new columns to existing database without losing data."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    migrations = [
+        ("Products", "unit_cost", "REAL DEFAULT 0.0"),
+        ("Products", "risk_level", "TEXT DEFAULT 'Medium'"),
+    ]
+    for table, column, col_type in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+            print(f"✅ Migrated: Added column '{column}' to '{table}'")
+        except Exception:
+            pass  # Column already exists, skip silently
+    # Set default values for existing rows that have NULL unit_cost
+    cursor.execute("UPDATE Products SET unit_cost = 12500.00, risk_level = 'High' WHERE product_id = 'P001' AND (unit_cost IS NULL OR unit_cost = 0.0)")
+    cursor.execute("UPDATE Products SET unit_cost = 4800.00, risk_level = 'Medium' WHERE product_id = 'P002' AND (unit_cost IS NULL OR unit_cost = 0.0)")
+    cursor.execute("UPDATE Products SET unit_cost = 850.00, risk_level = 'Low' WHERE product_id = 'P003' AND (unit_cost IS NULL OR unit_cost = 0.0)")
+    cursor.execute("UPDATE Products SET unit_cost = 120.00, risk_level = 'Low' WHERE product_id = 'SKU-1001' AND (unit_cost IS NULL OR unit_cost = 0.0)")
+    conn.commit()
+    conn.close()
 
 def log_audit(action: str, decision: str, guardrail_status: str, details: str):
     conn = get_connection()
@@ -105,4 +130,5 @@ def log_audit(action: str, decision: str, guardrail_status: str, details: str):
 
 if __name__ == "__main__":
     init_db()
+    migrate_db()
     print(f"Database {DB_NAME} initialized with sample data.")
