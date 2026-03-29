@@ -31,3 +31,4 @@ def chat_with_agent(request: ChatRequest):
         response=result.get("response", "Error processing request."),
         actions=result.get("actions", [])
     )
+

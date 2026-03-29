@@ -128,6 +128,7 @@ def load_logs():
     except Exception:
         return pd.DataFrame()
 
+
 logs_df_full = load_logs()
 logs_df = logs_df_full.head(30)
 if not logs_df.empty:

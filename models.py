@@ -14,6 +14,7 @@ class Inventory(BaseModel):
     lead_time_days: int
     model_config = ConfigDict(from_attributes=True)
 
+
 class Supplier(BaseModel):
     supplier_id: str
     name: str

@@ -6,3 +6,4 @@ with open("traceback.txt", "w") as f:
         import main
     except Exception as e:
         traceback.print_exc(file=f)
+

@@ -77,6 +77,7 @@ pip install -r requirements.txt
 
 Because the project relies on a decoupled Client (Streamlit) and Server (FastAPI), **both must be running simultaneously**.
 
+
 **Option 1: The Quick Start (Windows)**
 Simply run the included batch script. This will open two separate command prompts, execute both processes, and launch your browser!
 ```cmd

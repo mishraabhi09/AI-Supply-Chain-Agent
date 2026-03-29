@@ -10,6 +10,7 @@ def validate_order_cost(cost: float) -> dict | None:
         }
     return None
 
+
 def validate_supplier_location(supplier_id: str) -> dict | None:
     conn = get_connection()
     cursor = conn.cursor()

@@ -96,6 +96,7 @@ def init_db():
     conn.close()
     migrate_db()
 
+
 def migrate_db():
     """Safely add new columns to existing database without losing data."""
     conn = get_connection()

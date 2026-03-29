@@ -8,6 +8,7 @@ import datetime
 def export_csv(df: pd.DataFrame) -> bytes:
     return df.to_csv(index=False).encode('utf-8')
 
+
 def export_pdf(df: pd.DataFrame, title="Data Export") -> bytes:
     # A4 landscape orientation for better table fit
     pdf = FPDF(orientation="landscape", unit="mm", format="A4")

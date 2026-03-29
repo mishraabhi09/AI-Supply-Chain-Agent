@@ -162,6 +162,7 @@ Your job is to:
 8. Provide clear, concise responses.
 """
 
+
 ACTIVE_LLM = os.getenv("ACTIVE_LLM", "gemini").lower()
 
 if ACTIVE_LLM == "openai":

@@ -14,3 +14,4 @@ echo.
 echo All services are starting up! 
 echo If the browser does not open automatically, go to: http://localhost:8501
 echo To stop the servers, close the command prompt windows.
+
