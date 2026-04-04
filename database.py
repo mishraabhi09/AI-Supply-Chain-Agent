@@ -65,6 +65,27 @@ def init_db():
             guardrail_status TEXT,
             details TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS SupplierRiskScores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            supplier_id TEXT NOT NULL,
+            score REAL NOT NULL,
+            location_sub_score REAL NOT NULL,
+            failure_sub_score REAL NOT NULL,
+            disruption_sub_score REAL NOT NULL,
+            computed_at TEXT NOT NULL,
+            FOREIGN KEY(supplier_id) REFERENCES Suppliers(supplier_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_srs_supplier ON SupplierRiskScores(supplier_id);
+
+        CREATE TABLE IF NOT EXISTS ChatSessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('user', 'assistant')),
+            content TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_cs_session ON ChatSessions(session_id, timestamp);
     """)
 
     # Insert Sample Data if empty

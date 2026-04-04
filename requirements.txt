@@ -7,4 +7,14 @@ pydantic
 python-dotenv
 langchain-openai
 langchain-groq
-
+requests
+pytest
+hypothesis
+pytest-asyncio
+httpx
+newsapi-python
+fpdf2
+python-docx
+pandas
+openpyxl
+altair

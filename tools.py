@@ -5,6 +5,10 @@ from datetime import datetime
 from database import get_connection
 from guardrails import check_guardrails_for_order, check_guardrails_for_reroute
 import sqlite3
+import stockout_scanner
+import risk_scorer
+import scenario_planner
+import news_fetcher
 
 def query_database(sql_query: str) -> str:
     """Execute a READ-ONLY SQL query against the supply_chain.db database."""
@@ -43,17 +47,9 @@ def query_external_api(url: str, params_json: str = "{}") -> str:
         return json.dumps({"error": f"Failed to fetch data from API: {str(e)}"})
 
 def check_global_news(keyword: str) -> str:
-    """Check global news and events for supply chain disruptions by keyword."""
-    keyword_lower = keyword.lower()
-    if "rotterdam" in keyword_lower or "port" in keyword_lower or "strike" in keyword_lower:
-        return json.dumps({
-            "event": "Port Strike",
-            "location": "Rotterdam",
-            "severity": "Critical",
-            "estimated_delay_days": 14,
-            "description": "Major port strike in Rotterdam causing severe shipping delays."
-        })
-    return json.dumps({"status": "No major disruptions found for this keyword."})
+    """Fetch live global news for supply chain disruptions by keyword."""
+    result = news_fetcher.fetch_news(keyword)
+    return json.dumps(result)
 
 def check_inventory(product_id: str) -> str:
     """Check the inventory details for a given product ID."""
@@ -172,3 +168,31 @@ def reroute_shipment(order_id: str, new_supplier: str) -> str:
         "status": "Rerouted successfully"
     })
     
+
+
+# ── New tool wrappers ──────────────────────────────────────────────────────────
+
+def scan_stockout_alerts(horizon_days: int = 30) -> str:
+    """Scan all products for stockout risk within the given horizon (days)."""
+    try:
+        alerts = stockout_scanner.scan_stockouts(horizon_days)
+        if not alerts:
+            return json.dumps({"status": "No stockout risk detected", "horizon_days": horizon_days})
+        return json.dumps({"alerts": alerts, "count": len(alerts), "horizon_days": horizon_days})
+    except ValueError as e:
+        return json.dumps({"error": str(e)})
+
+
+def get_supplier_risk_scores() -> str:
+    """Compute and return risk scores (0-100) for all suppliers."""
+    scores = risk_scorer.compute_all_risk_scores()
+    return json.dumps({"scores": scores, "count": len(scores)})
+
+
+def run_scenario(supplier_id: str, offline_days: int) -> str:
+    """Run a what-if scenario for a supplier going offline."""
+    try:
+        result = scenario_planner.run_scenario(supplier_id, offline_days)
+        return json.dumps(result)
+    except ValueError as e:
+        return json.dumps({"error": str(e)})
