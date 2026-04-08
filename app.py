@@ -120,7 +120,7 @@ logs_df_full = load_logs()
 logs_df = logs_df_full.head(30)
 if not logs_df.empty:
     st.sidebar.dataframe(
-        logs_df.style.applymap(
+        logs_df.style.map(
             lambda x: 'background-color: #ffcccc; color: #111111; font-weight: 600' if x == 'blocked'
                  else ('background-color: #ccffcc; color: #111111; font-weight: 600' if x == 'passed'
                  else ('background-color: #fff3cd; color: #111111; font-weight: 600' if x == 'overridden' else '')),
