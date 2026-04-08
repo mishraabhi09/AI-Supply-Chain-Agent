@@ -1,4 +1,5 @@
 import uuid
+import os
 import streamlit as st
 import requests
 import pandas as pd
@@ -13,7 +14,11 @@ except Exception:
 
 st.set_page_config(page_title="Aegis Supply Chain Agent", layout="wide")
 
-BACKEND = "http://127.0.0.1:8000"
+# Backend URL — reads from Streamlit secrets (cloud) or env var (local/Render)
+try:
+    BACKEND = st.secrets.get("BACKEND_URL", os.environ.get("BACKEND_URL", "http://127.0.0.1:8000"))
+except Exception:
+    BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
 st.markdown("""
 <style>

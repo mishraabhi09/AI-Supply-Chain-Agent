@@ -1,1 +1,8 @@
 .env
+supply_chain.db
+__pycache__/
+*.pyc
+*.pyo
+.streamlit/secrets.toml
+error.log
+traceback.txt
